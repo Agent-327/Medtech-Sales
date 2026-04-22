@@ -1,0 +1,9 @@
+Flask
+flask-sock
+aiohttp
+requests
+msal
+python-pptx
+azure-identity
+agent-framework
+simple-websocket
