@@ -1,0 +1,2285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedTech Sales Platform</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    :root {
+      --primary: #00478F;
+      --accent: #0096D6;
+      --dark: #1A1A2E;
+      --bg: #F4F6F9;
+      --card: #FFFFFF;
+      --gray: #6C757D;
+      --light-gray: #E0E4EA;
+      --success: #28A745;
+      --warning: #F59E0B;
+      --radius: 12px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--dark);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header + Nav ── */
+    header {
+      background: linear-gradient(135deg, var(--primary), var(--dark));
+      color: #fff;
+      padding: 0 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.15);
+      z-index: 10;
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 0 0;
+    }
+    .logo {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 700;
+    }
+    .brand h1 { font-size: 18px; font-weight: 600; }
+    .brand p  { font-size: 11px; opacity: .65; margin-top: 1px; }
+
+    nav {
+      display: flex;
+      gap: 0;
+      margin-top: 12px;
+    }
+    nav button {
+      padding: 10px 28px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: rgba(255,255,255,.6);
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    nav button:hover { color: #fff; }
+    nav button.active {
+      color: #fff;
+      border-bottom-color: var(--accent);
+    }
+    nav button .nav-icon {
+      font-size: 16px;
+    }
+
+    /* ── Shared layout ── */
+    .page { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── Chat (shared by Practice & Deliver) ── */
+    .chat-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .message {
+      max-width: 720px;
+      padding: 14px 18px;
+      border-radius: var(--radius);
+      line-height: 1.55;
+      font-size: 14px;
+      white-space: pre-wrap;
+      animation: fadeIn .25s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .message.user {
+      align-self: flex-end;
+      background: var(--primary);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .message.bot {
+      align-self: flex-start;
+      background: var(--card);
+      border: 1px solid var(--light-gray);
+      border-bottom-left-radius: 4px;
+    }
+    .message .label {
+      font-size: 10.5px;
+      font-weight: 700;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .message.bot .label { color: var(--accent); }
+    .message.coach {
+      align-self: flex-start;
+      background: #FFF8E1;
+      border: 1px solid #FFE082;
+      border-bottom-left-radius: 4px;
+    }
+    .message.coach .label { color: var(--warning); }
+
+    .thinking span {
+      display: inline-block;
+      width: 7px; height: 7px;
+      margin: 0 2px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: bounce .6s infinite alternate;
+    }
+    .thinking span:nth-child(2) { animation-delay: .15s; }
+    .thinking span:nth-child(3) { animation-delay: .3s; }
+    @keyframes bounce { to { transform: translateY(-5px); opacity: .4; } }
+
+    /* Voice pulse animation */
+    .voice-pulse-ring {
+      position: relative;
+      width: 120px; height: 120px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .voice-pulse-ring::before, .voice-pulse-ring::after {
+      content: "";
+      position: absolute;
+      border: 3px solid #6C63FF;
+      border-radius: 50%;
+      animation: vpulse 2s ease-out infinite;
+    }
+    .voice-pulse-ring::before { width: 100%; height: 100%; }
+    .voice-pulse-ring::after  { width: 100%; height: 100%; animation-delay: .6s; }
+    .voice-pulse-dot {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, #6C63FF 0%, #9F7AEA 100%);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      z-index: 1;
+    }
+    .voice-pulse-dot::after { content: "\1F3A4"; }
+    @keyframes vpulse {
+      0% { transform: scale(.8); opacity: .8; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      padding: 8px 16px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background .2s;
+    }
+    .download-btn:hover { background: var(--primary); }
+
+    .input-bar {
+      padding: 14px 24px;
+      background: var(--card);
+      border-top: 1px solid var(--light-gray);
+      display: flex;
+      gap: 10px;
+    }
+    .input-bar input {
+      flex: 1;
+      padding: 11px 16px;
+      border: 2px solid var(--light-gray);
+      border-radius: 10px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .input-bar input:focus { border-color: var(--accent); }
+    .input-bar button {
+      padding: 11px 24px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s;
+      white-space: nowrap;
+    }
+    .input-bar button:hover { background: var(--dark); }
+    .input-bar button:disabled { opacity: .5; cursor: not-allowed; }
+    .input-bar .secondary-btn {
+      background: transparent;
+      border: 2px solid var(--light-gray);
+      color: var(--gray);
+    }
+    .input-bar .secondary-btn:hover { border-color: var(--accent); color: var(--accent); background: transparent; }
+
+    /* ── Welcome cards ── */
+    .welcome {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 16px;
+      padding: 24px;
+    }
+    .welcome .icon { font-size: 44px; }
+    .welcome h2 { font-size: 20px; color: var(--primary); }
+    .welcome p  { font-size: 13.5px; color: var(--gray); max-width: 460px; line-height: 1.5; }
+    .suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 4px;
+    }
+    .suggestions button {
+      padding: 8px 16px;
+      border: 1.5px solid #D0D5DD;
+      border-radius: 20px;
+      background: #fff;
+      color: var(--dark);
+      font-size: 12.5px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .suggestions button:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Practice setup cards ── */
+    .setup-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 24px;
+      gap: 28px;
+      overflow-y: auto;
+    }
+    .setup-screen h2 { font-size: 22px; color: var(--primary); }
+    .setup-screen > p { font-size: 13.5px; color: var(--gray); max-width: 540px; text-align: center; line-height: 1.5; }
+    .setup-section { width: 100%; max-width: 700px; }
+    .setup-section h3 {
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+    .card-grid {
+      display: grid;
+      gap: 10px;
+    }
+    .card-grid.products { grid-template-columns: repeat(4, 1fr); }
+    .card-grid.personas { grid-template-columns: repeat(2, 1fr); }
+    .option-card {
+      padding: 14px 16px;
+      border: 2px solid var(--light-gray);
+      border-radius: var(--radius);
+      background: var(--card);
+      cursor: pointer;
+      transition: all .2s;
+      text-align: center;
+    }
+    .option-card:hover { border-color: var(--accent); }
+    .option-card.selected { border-color: var(--primary); background: #EBF5FF; }
+    .option-card .card-title { font-size: 14px; font-weight: 700; color: var(--dark); }
+    .option-card .card-sub { font-size: 11.5px; color: var(--gray); margin-top: 3px; }
+    .start-btn {
+      padding: 12px 36px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .start-btn:hover { background: var(--dark); }
+    .start-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+    @media (max-width: 640px) {
+      .card-grid.products { grid-template-columns: repeat(2, 1fr); }
+      .card-grid.personas { grid-template-columns: 1fr; }
+    }
+    .followup-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+      gap: 16px;
+      overflow-y: auto;
+    }
+    .followup-panel h2 { font-size: 18px; color: var(--primary); }
+    .followup-panel .desc {
+      font-size: 13px;
+      color: var(--gray);
+      line-height: 1.5;
+    }
+    .followup-panel textarea {
+      flex: 1;
+      min-height: 180px;
+      padding: 14px;
+      border: 2px solid var(--light-gray);
+      border-radius: var(--radius);
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      resize: none;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .followup-panel textarea:focus { border-color: var(--accent); }
+    .field-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .field-row label {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .field-row input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 2px solid var(--light-gray);
+      border-radius: 8px;
+      font-size: 13.5px;
+      outline: none;
+    }
+    .field-row input:focus { border-color: var(--accent); }
+    .action-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .action-row button {
+      padding: 11px 24px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .action-row button:hover { background: var(--dark); }
+    .action-row button:disabled { opacity: .5; cursor: not-allowed; }
+    .workflow-steps {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 2px 0;
+    }
+    .step {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 14px;
+      border-radius: 20px;
+      background: #F0F0F0;
+      color: var(--gray);
+      transition: all .3s;
+    }
+    .step.active { background: var(--accent); color: #fff; }
+    .step.done { background: #D4EDDA; color: #155724; }
+    .step-arrow { color: var(--light-gray); font-size: 14px; }
+    .result-card {
+      background: var(--card);
+      border: 1px solid var(--light-gray);
+      border-radius: var(--radius);
+      padding: 16px;
+      line-height: 1.6;
+      font-size: 13.5px;
+      white-space: pre-wrap;
+      animation: fadeIn .3s ease;
+    }
+    .result-card .result-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-top" id="header-home" style="cursor:pointer">
+    <div class="logo">M</div>
+    <div class="brand">
+      <h1>MedTech Sales Platform</h1>
+      <p>Practice, Deliver &amp; Follow Up \u2014 powered by AI</p>
+    </div>
+  </div>
+  <nav id="nav"></nav>
+</header>
+
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useRef, useEffect, useCallback } = React;
+
+/* ───────── Practice Page ───────── */
+function PracticePage() {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [phase, setPhase] = useState("setup"); // "setup" | "chat" | "voice"
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedPersona, setSelectedPersona] = useState(null);
+  const [options, setOptions] = useState({ products: [], personas: [] });
+  const chatRef = useRef(null);
+  const sessionId = useRef("s_" + Date.now());
+
+  // Voice state
+  const [voiceStatus, setVoiceStatus] = useState("idle"); // idle | connecting | connected | error
+  const [voiceError, setVoiceError] = useState("");
+  const wsRef = useRef(null);
+  const audioCtxRef = useRef(null);
+  const micStreamRef = useRef(null);
+  const processorRef = useRef(null);
+  const playQueueRef = useRef([]);
+  const isPlayingRef = useRef(false);
+
+  useEffect(() => {
+    fetch("/api/practice/options").then(r => r.json()).then(setOptions).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
+  }, [messages, loading]);
+
+  const startSession = () => {
+    if (!selectedProduct || !selectedPersona) return;
+    setPhase("chat");
+    // Auto-send a greeting to kick off the conversation
+    sendMsg("Hi, I'd like to discuss " + selectedProduct + " with you.");
+  };
+
+  const sendMsg = async (text) => {
+    const msg = (text || input).trim();
+    if (!msg || loading) return;
+    setInput("");
+    setMessages((p) => [...p, { role: "user", text: msg }]);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/practice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: msg,
+          sessionId: sessionId.current,
+          product: selectedProduct,
+          persona: selectedPersona,
+        }),
+      });
+      const data = await res.json();
+      setMessages((p) => [...p, { role: "bot", text: data.reply || data.error }]);
+    } catch {
+      setMessages((p) => [...p, { role: "bot", text: "Network error." }]);
+    } finally { setLoading(false); }
+  };
+
+  const reset = async () => {
+    await fetch("/api/practice/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId: sessionId.current }),
+    });
+    sessionId.current = "s_" + Date.now();
+    setMessages([]);
+    setPhase("setup");
+  };
+
+  // ── Voice session helpers ──
+  const arrayBufToBase64 = (buf) => {
+    const bytes = new Uint8Array(buf);
+    let bin = "";
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  };
+  const base64ToArrayBuf = (b64) => {
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes.buffer;
+  };
+
+  const playNextChunk = () => {
+    const ctx = audioCtxRef.current;
+    if (!ctx || isPlayingRef.current || playQueueRef.current.length === 0) return;
+    isPlayingRef.current = true;
+    const pcmBuf = playQueueRef.current.shift();
+    const int16 = new Int16Array(pcmBuf);
+    const float32 = new Float32Array(int16.length);
+    for (let i = 0; i < int16.length; i++) float32[i] = int16[i] / 32768;
+    const audioBuf = ctx.createBuffer(1, float32.length, 24000);
+    audioBuf.getChannelData(0).set(float32);
+    const src = ctx.createBufferSource();
+    src.buffer = audioBuf;
+    src.connect(ctx.destination);
+    src.onended = () => { isPlayingRef.current = false; playNextChunk(); };
+    src.start();
+  };
+
+  const startVoice = async () => {
+    if (!selectedProduct || !selectedPersona) return;
+    setVoiceStatus("connecting");
+    setVoiceError("");
+    setPhase("voice");
+
+    try {
+      // 1. Get voice config (instructions + voice) from backend
+      const cfgRes = await fetch("/api/practice/voice-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product: selectedProduct, persona: selectedPersona }),
+      });
+      const cfg = await cfgRes.json();
+      if (!cfgRes.ok) throw new Error(cfg.error || "Failed to get voice config");
+
+      // 2. Connect to local WebSocket proxy (Flask → Azure VoiceLive)
+      const wsProto = location.protocol === "https:" ? "wss:" : "ws:";
+      const ws = new WebSocket(`${wsProto}//${location.host}/api/practice/voice-ws`);
+      wsRef.current = ws;
+
+      // 3. Create AudioContext for playback
+      const ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+      audioCtxRef.current = ctx;
+      playQueueRef.current = [];
+      isPlayingRef.current = false;
+
+      let sessionReady = false;
+
+      ws.onopen = () => {
+        // Wait for session.created from Azure before sending session.update
+      };
+
+      ws.onmessage = (e) => {
+        const evt = JSON.parse(e.data);
+        if (evt.type === "session.created" && !sessionReady) {
+          // Send session.update with instructions, voice, VAD config
+          ws.send(JSON.stringify({
+            type: "session.update",
+            session: {
+              modalities: ["text", "audio"],
+              instructions: cfg.instructions,
+              voice: cfg.voice,
+              input_audio_format: "pcm16",
+              output_audio_format: "pcm16",
+              turn_detection: { type: "server_vad", threshold: 0.5, prefix_padding_ms: 300, silence_duration_ms: 500 },
+            },
+          }));
+        } else if (evt.type === "session.updated") {
+          sessionReady = true;
+          startMicCapture(ws, ctx);
+          setVoiceStatus("connected");
+        } else if (evt.type === "response.audio.delta" && evt.delta) {
+          const pcm = base64ToArrayBuf(evt.delta);
+          playQueueRef.current.push(pcm);
+          playNextChunk();
+        } else if (evt.type === "input_audio_buffer.speech_started") {
+          playQueueRef.current.length = 0;
+          isPlayingRef.current = false;
+        } else if (evt.type === "error") {
+          console.error("Realtime API error:", evt.error);
+        }
+      };
+
+      ws.onerror = () => {
+        setVoiceError("WebSocket connection to proxy failed.");
+        setVoiceStatus("error");
+      };
+
+      ws.onclose = (e) => {
+        console.log("WebSocket closed:", e.code, e.reason);
+      };
+
+    } catch (e) {
+      console.error("Voice session error:", e);
+      setVoiceError(e.message || "Failed to connect voice session.");
+      setVoiceStatus("error");
+    }
+  };
+
+  const startMicCapture = (ws, ctx) => {
+    navigator.mediaDevices.getUserMedia({ audio: { sampleRate: 24000, channelCount: 1, echoCancellation: true, noiseSuppression: true } })
+      .then(stream => {
+        micStreamRef.current = stream;
+        const source = ctx.createMediaStreamSource(stream);
+        const processor = ctx.createScriptProcessor(4096, 1, 1);
+        processorRef.current = processor;
+        processor.onaudioprocess = (ev) => {
+          if (ws.readyState !== WebSocket.OPEN) return;
+          const float32 = ev.inputBuffer.getChannelData(0);
+          const int16 = new Int16Array(float32.length);
+          for (let i = 0; i < float32.length; i++) {
+            int16[i] = Math.max(-32768, Math.min(32767, Math.round(float32[i] * 32767)));
+          }
+          ws.send(JSON.stringify({
+            type: "input_audio_buffer.append",
+            audio: arrayBufToBase64(int16.buffer),
+          }));
+        };
+        source.connect(processor);
+        processor.connect(ctx.destination);
+      })
+      .catch(err => {
+        console.error("Mic access denied:", err);
+        setVoiceError("Microphone access denied.");
+        setVoiceStatus("error");
+      });
+  };
+
+  const stopVoice = () => {
+    if (wsRef.current) { wsRef.current.close(); wsRef.current = null; }
+    if (processorRef.current) { processorRef.current.disconnect(); processorRef.current = null; }
+    if (micStreamRef.current) { micStreamRef.current.getTracks().forEach(t => t.stop()); micStreamRef.current = null; }
+    if (audioCtxRef.current) { audioCtxRef.current.close(); audioCtxRef.current = null; }
+    playQueueRef.current = [];
+    isPlayingRef.current = false;
+    setVoiceStatus("idle");
+    setPhase("setup");
+  };
+
+  const handleKey = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); } };
+
+  if (phase === "setup") {
+    return (
+      <div className="page">
+        <div className="setup-screen">
+          <div className="icon" style={{fontSize: "44px"}}>{"\uD83C\uDFAF"}</div>
+          <h2>Configure Your Practice Session</h2>
+          <p>Select a product to pitch and a surgeon persona to practice against. The AI coach will adapt the conversation to test your skills with realistic objections and feedback.</p>
+
+          <div className="setup-section">
+            <h3>{"\uD83D\uDCE6"} Select Product</h3>
+            <div className="card-grid products">
+              {options.products.map(p => (
+                <div key={p.key}
+                  className={"option-card" + (selectedProduct === p.key ? " selected" : "")}
+                  onClick={() => setSelectedProduct(p.key)}>
+                  <div className="card-title">{p.name}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="setup-section">
+            <h3>{"\uD83E\uDDD1\u200D\u2695\uFE0F"} Select Surgeon Profile</h3>
+            <div className="card-grid personas">
+              {options.personas.map(p => (
+                <div key={p.key}
+                  className={"option-card" + (selectedPersona === p.key ? " selected" : "")}
+                  onClick={() => setSelectedPersona(p.key)}>
+                  <div className="card-title">{p.name}</div>
+                  <div className="card-sub">{p.subtitle}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{display:"flex", gap:"12px", justifyContent:"center", flexWrap:"wrap"}}>
+            <button className="start-btn" disabled={!selectedProduct || !selectedPersona} onClick={startSession}>
+              Start Practice Session
+            </button>
+            <button className="start-btn" disabled={!selectedProduct || !selectedPersona} onClick={startVoice}
+              style={{background:"linear-gradient(135deg, #6C63FF 0%, #9F7AEA 100%)"}}>
+              &#x1F3A4; Voice Practice
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const personaLabel = (options.personas.find(p => p.key === selectedPersona) || {}).name || "Surgeon";
+
+  // ── Voice session view ──
+  if (phase === "voice") {
+    return (
+      <div className="page">
+        <div style={{padding:"8px 24px", background:"var(--card)", borderBottom:"1px solid var(--light-gray)", display:"flex", alignItems:"center", gap:"16px", fontSize:"13px", color:"var(--gray)"}}>
+          <span><strong>Product:</strong> {selectedProduct}</span>
+          <span style={{color:"var(--light-gray)"}}>|</span>
+          <span><strong>Persona:</strong> {personaLabel}</span>
+          <span style={{color:"var(--light-gray)"}}>|</span>
+          <span style={{color:"#6C63FF", fontWeight:"600"}}>&#x1F3A4; Voice Mode</span>
+        </div>
+        <div style={{flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:"24px", padding:"40px"}}>
+          {voiceStatus === "connecting" && (
+            <>
+              <div style={{fontSize:"56px"}}>&#x1F3A4;</div>
+              <div style={{fontSize:"18px", fontWeight:"600", color:"var(--dark)"}}>Connecting voice session…</div>
+              <div className="thinking"><span></span><span></span><span></span></div>
+            </>
+          )}
+          {voiceStatus === "connected" && (
+            <>
+              <div className="voice-pulse-ring">
+                <div className="voice-pulse-dot"></div>
+              </div>
+              <div style={{fontSize:"18px", fontWeight:"600", color:"var(--dark)"}}>Voice session active</div>
+              <p style={{color:"var(--gray)", fontSize:"14px", maxWidth:"400px", textAlign:"center", lineHeight:"1.6"}}>
+                Speak naturally with {personaLabel}. The AI surgeon will respond in real time.
+                Practice your pitch and handle objections just like a real call.
+              </p>
+              <button onClick={stopVoice}
+                style={{padding:"12px 32px", background:"#E53E3E", color:"#fff", border:"none",
+                  borderRadius:"12px", fontSize:"15px", fontWeight:"600", cursor:"pointer", marginTop:"8px"}}>
+                &#x23F9; End Voice Session
+              </button>
+            </>
+          )}
+          {voiceStatus === "error" && (
+            <>
+              <div style={{fontSize:"56px"}}>&#x26A0;&#xFE0F;</div>
+              <div style={{fontSize:"16px", fontWeight:"600", color:"#E53E3E"}}>Voice connection failed</div>
+              <p style={{color:"var(--gray)", fontSize:"13px", maxWidth:"400px", textAlign:"center"}}>{voiceError}</p>
+              <div style={{display:"flex", gap:"12px"}}>
+                <button onClick={startVoice}
+                  style={{padding:"10px 24px", background:"#6C63FF", color:"#fff", border:"none",
+                    borderRadius:"10px", fontSize:"14px", fontWeight:"600", cursor:"pointer"}}>
+                  Retry
+                </button>
+                <button onClick={() => { setVoiceStatus("idle"); setPhase("setup"); }}
+                  style={{padding:"10px 24px", background:"var(--card)", color:"var(--gray)", border:"2px solid var(--light-gray)",
+                    borderRadius:"10px", fontSize:"14px", fontWeight:"600", cursor:"pointer"}}>
+                  Back to Setup
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page">
+      <div style={{padding:"8px 24px", background:"var(--card)", borderBottom:"1px solid var(--light-gray)", display:"flex", alignItems:"center", gap:"16px", fontSize:"13px", color:"var(--gray)"}}>
+        <span><strong>Product:</strong> {selectedProduct}</span>
+        <span style={{color:"var(--light-gray)"}}>|</span>
+        <span><strong>Persona:</strong> {personaLabel}</span>
+      </div>
+      <div className="chat-area" ref={chatRef}>
+        {messages.map((m, i) => {
+          const isCoach = m.role === "bot" && m.text.includes("[COACH]");
+          return (
+            <div key={i} className={`message ${m.role === "user" ? "user" : isCoach ? "coach" : "bot"}`}>
+              {m.role !== "user" && <div className="label">{isCoach ? "Coach Feedback" : personaLabel}</div>}
+              {m.text}
+            </div>
+          );
+        })}
+        {loading && (
+          <div className="message bot"><div className="label">{personaLabel}</div><div className="thinking"><span></span><span></span><span></span></div></div>
+        )}
+      </div>
+      <div className="input-bar">
+        <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKey}
+          placeholder="Respond to the surgeon..." disabled={loading} />
+        <button onClick={() => sendMsg()} disabled={loading || !input.trim()}>Send</button>
+        <button className="secondary-btn" onClick={reset} disabled={loading}>New Session</button>
+        {messages.length > 4 && <button className="secondary-btn" onClick={() => sendMsg("done")} disabled={loading}>End &amp; Score</button>}
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Deliver Page ───────── */
+
+function DeliverPage({ onNavigateTranslate }) {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [phase, setPhase] = useState("setup");
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedPersona, setSelectedPersona] = useState(null);
+  const [options, setOptions] = useState({ products: [], personas: [] });
+  const chatRef = useRef(null);
+
+  // ── Ambient listening state ──
+  const [ambientStatus, setAmbientStatus] = useState("idle"); // idle | connecting | active | error
+  const [ambientError, setAmbientError] = useState("");
+  const [transcript, setTranscript] = useState([]); // [{speaker, text, final}]
+  const [interimLine, setInterimLine] = useState(null);
+  const [copiedTip, setCopiedTip] = useState(false);
+  const ambientWsRef = useRef(null);
+  const ambientMicRef = useRef(null);
+  const ambientCtxRef = useRef(null);
+  const ambientProcRef = useRef(null);
+  const transcriptEndRef = useRef(null);
+
+  useEffect(() => {
+    fetch("/api/deliver/options").then(r => r.json()).then(setOptions).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
+  }, [messages, loading]);
+
+  const send = async (text) => {
+    const msg = (text || input).trim();
+    if (!msg || loading) return;
+    setInput("");
+    setMessages((p) => [...p, { role: "user", text: msg }]);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: msg,
+          product: selectedProduct,
+          persona: selectedPersona,
+        }),
+      });
+      const data = await res.json();
+      setMessages((p) => [...p, { role: "bot", text: data.reply || data.error }]);
+    } catch {
+      setMessages((p) => [...p, { role: "bot", text: "Network error." }]);
+    } finally { setLoading(false); }
+  };
+
+  const handleKey = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } };
+  const showDl = (t) => { const l = t.toLowerCase(); return l.includes("presentation") && (l.includes("created") || l.includes("generated") || l.includes("sent") || l.includes("emailed")); };
+
+  // ── Ambient listening helpers ──
+  const ambientArrayBufToBase64 = (buf) => {
+    const bytes = new Uint8Array(buf);
+    let bin = "";
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  };
+
+  const startAmbient = async () => {
+    setAmbientStatus("connecting");
+    setAmbientError("");
+    setTranscript([]);
+    setInterimLine(null);
+    setPhase("ambient");
+
+    try {
+      // Open WebSocket to backend transcription endpoint
+      const wsProto = location.protocol === "https:" ? "wss:" : "ws:";
+      const ws = new WebSocket(`${wsProto}//${location.host}/api/ambient/ws`);
+      ambientWsRef.current = ws;
+
+      ws.onopen = async () => {
+        setAmbientStatus("active");
+        // Start mic capture and stream PCM16 at 24kHz
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+          ambientCtxRef.current = ctx;
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: { sampleRate: 24000, channelCount: 1, echoCancellation: true, noiseSuppression: true }
+          });
+          ambientMicRef.current = stream;
+          const source = ctx.createMediaStreamSource(stream);
+          const processor = ctx.createScriptProcessor(4096, 1, 1);
+          ambientProcRef.current = processor;
+          processor.onaudioprocess = (ev) => {
+            if (ws.readyState !== WebSocket.OPEN) return;
+            const float32 = ev.inputBuffer.getChannelData(0);
+            const int16 = new Int16Array(float32.length);
+            for (let i = 0; i < float32.length; i++) {
+              int16[i] = Math.max(-32768, Math.min(32767, Math.round(float32[i] * 32767)));
+            }
+            ws.send(JSON.stringify({
+              type: "audio",
+              data: ambientArrayBufToBase64(int16.buffer),
+            }));
+          };
+          source.connect(processor);
+          processor.connect(ctx.destination);
+        } catch (micErr) {
+          setAmbientError("Microphone access denied.");
+          setAmbientStatus("error");
+        }
+      };
+
+      ws.onmessage = (e) => {
+        const evt = JSON.parse(e.data);
+        if (evt.type === "transcribing") {
+          setInterimLine({ speaker: evt.speaker, text: evt.text });
+        } else if (evt.type === "transcribed" && evt.text) {
+          setInterimLine(null);
+          setTranscript(prev => [...prev, { speaker: evt.speaker, text: evt.text, final: true }]);
+        } else if (evt.type === "error") {
+          setAmbientError(evt.message);
+          setAmbientStatus("error");
+        } else if (evt.type === "stopped") {
+          setAmbientStatus("idle");
+        }
+      };
+
+      ws.onerror = () => {
+        if (ambientWsRef.current) {
+          setAmbientError("WebSocket connection failed.");
+          setAmbientStatus("error");
+        }
+      };
+
+      ws.onclose = () => {
+        ambientWsRef.current = null;
+        setAmbientStatus(prev => prev === "active" ? "idle" : prev);
+      };
+    } catch (e) {
+      setAmbientError(e.message || "Failed to start ambient listening.");
+      setAmbientStatus("error");
+    }
+  };
+
+  const stopAmbient = () => {
+    // Grab ref and null it immediately so onerror/onclose handlers won't fire
+    const ws = ambientWsRef.current;
+    ambientWsRef.current = null;
+    // Stop mic & audio processing
+    if (ambientProcRef.current) { ambientProcRef.current.disconnect(); ambientProcRef.current = null; }
+    if (ambientMicRef.current) { ambientMicRef.current.getTracks().forEach(t => t.stop()); ambientMicRef.current = null; }
+    if (ambientCtxRef.current) { ambientCtxRef.current.close(); ambientCtxRef.current = null; }
+    setInterimLine(null);
+    setAmbientStatus("idle");
+    // Tell server to stop, then close
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      try { ws.send(JSON.stringify({ type: "stop" })); } catch(_) {}
+      setTimeout(() => { try { ws.close(); } catch(_) {} }, 500);
+    }
+  };
+
+  // Auto-scroll transcript
+  useEffect(() => {
+    if (transcriptEndRef.current) transcriptEndRef.current.scrollIntoView({ behavior: "smooth" });
+  }, [transcript, interimLine]);
+
+  if (phase === "setup") {
+    return (
+      <div className="page">
+        <div className="setup-screen">
+          <div className="icon" style={{fontSize: "44px"}}>{"\uD83D\uDCCA"}</div>
+          <h2>Configure Your Presentation</h2>
+          <p>Select a product and target surgeon profile. The agent will create a tailored presentation you can email directly.</p>
+
+          <div className="setup-section">
+            <h3>{"\uD83D\uDCE6"} Select Product</h3>
+            <div className="card-grid products">
+              {options.products.map(p => (
+                <div key={p.key}
+                  className={"option-card" + (selectedProduct === p.key ? " selected" : "")}
+                  onClick={() => setSelectedProduct(p.key)}>
+                  <div className="card-title">{p.name}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="setup-section">
+            <h3>{"\uD83E\uDDD1\u200D\u2695\uFE0F"} Select Surgeon Profile</h3>
+            <div className="card-grid personas">
+              {options.personas.map(p => (
+                <div key={p.key}
+                  className={"option-card" + (selectedPersona === p.key ? " selected" : "")}
+                  onClick={() => setSelectedPersona(p.key)}>
+                  <div className="card-title">{p.name}</div>
+                  <div className="card-sub">{p.subtitle}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{display:"flex", gap:"12px", justifyContent:"center", flexWrap:"wrap"}}>
+            <button className="start-btn" disabled={!selectedProduct || !selectedPersona} onClick={() => setPhase("chat")}>
+              Customize with Presentation Agent
+            </button>
+            <button className="start-btn" onClick={startAmbient}
+              style={{background:"linear-gradient(135deg, #D97706 0%, #F59E0B 100%)"}}>
+              🎙️ Ambient Listening
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const productLabel = selectedProduct || "—";
+  const personaLabel = (options.personas.find(p => p.key === selectedPersona) || {}).name || "—";
+
+  // Speaker color map for diarization
+  const speakerColors = {};
+  const colorPalette = ["#0072C6", "#6B21A8", "#047857", "#D97706", "#DC2626", "#0891B2"];
+  let colorIdx = 0;
+  const getSpeakerColor = (speaker) => {
+    if (!speakerColors[speaker]) {
+      speakerColors[speaker] = colorPalette[colorIdx % colorPalette.length];
+      colorIdx++;
+    }
+    return speakerColors[speaker];
+  };
+
+  // ── Ambient listening view ──
+  if (phase === "ambient") {
+    // Build color map from transcript
+    transcript.forEach(t => getSpeakerColor(t.speaker));
+    if (interimLine) getSpeakerColor(interimLine.speaker);
+
+    return (
+      <div className="page">
+        <div style={{padding:"8px 24px", background:"var(--card)", borderBottom:"1px solid var(--light-gray)", display:"flex", alignItems:"center", gap:"16px", fontSize:"13px", color:"var(--gray)"}}>
+          <span style={{color:"#D97706", fontWeight:600}}>🎙️ Ambient Listening</span>
+          <span style={{color:"var(--light-gray)"}}>|</span>
+          <span>Real-time transcription with speaker diarization</span>
+          {ambientStatus === "active" && (
+            <div style={{marginLeft:"auto", display:"flex", alignItems:"center", gap:6}}>
+              <div style={{width:8, height:8, borderRadius:"50%", background:"#DC2626", animation:"pulse 1.5s infinite"}}></div>
+              <span style={{color:"#DC2626", fontWeight:600, fontSize:12}}>LIVE</span>
+            </div>
+          )}
+        </div>
+
+        <div style={{flex:1, overflow:"auto", padding:"20px 24px"}} >
+          {ambientStatus === "connecting" && (
+            <div style={{textAlign:"center", padding:"60px 0"}}>
+              <div style={{fontSize:48}}>🎙️</div>
+              <div style={{fontWeight:600, color:"var(--dark)", marginTop:12}}>Connecting…</div>
+              <div className="thinking"><span></span><span></span><span></span></div>
+            </div>
+          )}
+
+          {ambientStatus === "error" && (
+            <div style={{textAlign:"center", padding:"60px 0"}}>
+              <div style={{fontSize:48}}>⚠️</div>
+              <div style={{fontWeight:600, color:"#DC2626", marginTop:8}}>{ambientError}</div>
+              <div style={{display:"flex", gap:12, justifyContent:"center", marginTop:16}}>
+                <button onClick={startAmbient}
+                  style={{padding:"10px 24px", background:"#D97706", color:"#fff", border:"none",
+                    borderRadius:10, fontSize:14, fontWeight:600, cursor:"pointer"}}>Retry</button>
+                <button onClick={() => { stopAmbient(); setPhase("setup"); }}
+                  style={{padding:"10px 24px", background:"#fff", color:"var(--gray)", border:"2px solid var(--light-gray)",
+                    borderRadius:10, fontSize:14, fontWeight:600, cursor:"pointer"}}>Back</button>
+              </div>
+            </div>
+          )}
+
+          {(ambientStatus === "active" || (ambientStatus === "idle" && transcript.length > 0)) && (
+            <div>
+              {transcript.length === 0 && !interimLine && (
+                <div style={{textAlign:"center", color:"var(--gray)", padding:"40px 0", fontSize:14}}>
+                  Listening… Start speaking and the transcript will appear here.
+                </div>
+              )}
+              {transcript.map((t, i) => (
+                <div key={i} style={{marginBottom:10, padding:"8px 14px", background:"#F8FAFC", borderRadius:10,
+                  borderLeft:`4px solid ${getSpeakerColor(t.speaker)}`}}>
+                  <div style={{fontWeight:700, fontSize:12, color:getSpeakerColor(t.speaker), marginBottom:2}}>
+                    {t.speaker}
+                  </div>
+                  <div style={{fontSize:14, color:"#334155", lineHeight:1.5}}>{t.text}</div>
+                </div>
+              ))}
+              {interimLine && (
+                <div style={{marginBottom:10, padding:"8px 14px", background:"#FFFBEB", borderRadius:10,
+                  borderLeft:`4px solid ${getSpeakerColor(interimLine.speaker)}`, opacity:0.7}}>
+                  <div style={{fontWeight:700, fontSize:12, color:getSpeakerColor(interimLine.speaker), marginBottom:2}}>
+                    {interimLine.speaker} <span style={{fontWeight:400, color:"#94A3B8"}}>(listening…)</span>
+                  </div>
+                  <div style={{fontSize:14, color:"#334155", lineHeight:1.5, fontStyle:"italic"}}>{interimLine.text}</div>
+                </div>
+              )}
+              <div ref={transcriptEndRef}></div>
+            </div>
+          )}
+        </div>
+
+        <div style={{padding:"12px 24px", borderTop:"1px solid var(--light-gray)", display:"flex", gap:12, alignItems:"center", background:"var(--card)"}}>
+          {ambientStatus === "active" && (
+            <button onClick={stopAmbient}
+              style={{padding:"10px 28px", background:"#DC2626", color:"#fff", border:"none",
+                borderRadius:10, fontSize:14, fontWeight:600, cursor:"pointer"}}>
+              ⏹ Stop Listening
+            </button>
+          )}
+          {ambientStatus === "idle" && transcript.length > 0 && (
+            <>
+              <button onClick={startAmbient}
+                style={{padding:"10px 28px", background:"#D97706", color:"#fff", border:"none",
+                  borderRadius:10, fontSize:14, fontWeight:600, cursor:"pointer"}}>
+                🎙️ Resume Listening
+              </button>
+              <button onClick={() => {
+                const text = transcript.map(t => `${t.speaker}: ${t.text}`).join("\n");
+                navigator.clipboard.writeText(text).then(() => {
+                  setCopiedTip(true);
+                  setTimeout(() => setCopiedTip(false), 10000);
+                });
+              }}
+                style={{padding:"10px 28px", background:"#0072C6", color:"#fff", border:"none",
+                  borderRadius:10, fontSize:14, fontWeight:600, cursor:"pointer"}}>
+                📋 Copy Transcript
+              </button>
+              {copiedTip && (
+                <span style={{fontSize:12, color:"#047857", fontWeight:600, animation:"fadeIn .2s"}}>✓ Transcript copied to clipboard</span>
+              )}
+              <button onClick={() => { setPhase("setup"); setTranscript([]); }}
+                style={{padding:"10px 24px", background:"#fff", color:"var(--gray)", border:"2px solid var(--light-gray)",
+                  borderRadius:10, fontSize:14, fontWeight:600, cursor:"pointer"}}>
+                Back to Setup
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page">
+      <div style={{padding:"8px 24px", background:"var(--card)", borderBottom:"1px solid var(--light-gray)", display:"flex", alignItems:"center", gap:"16px", fontSize:"13px", color:"var(--gray)"}}>
+        <span><strong>Product:</strong> {productLabel}</span>
+        <span style={{color:"var(--light-gray)"}}>|</span>
+        <span><strong>Persona:</strong> {personaLabel}</span>
+        <button onClick={() => { setPhase("setup"); setMessages([]); }}
+          style={{marginLeft:"auto", padding:"4px 12px", fontSize:"11.5px", border:"1.5px solid #D0D5DD",
+            borderRadius:"6px", background:"#fff", cursor:"pointer", color:"var(--gray)"}}>
+          Change
+        </button>
+      </div>
+      <div className="chat-area" ref={chatRef}>
+        {messages.length === 0 && !loading ? (
+          <div className="welcome">
+            <div className="icon">&#x1F4CA;</div>
+            <h2>Deliver Presentations</h2>
+            <p>Describe the presentation you need. It will be tailored to <strong>{productLabel}</strong> for the <strong>{personaLabel}</strong> profile.</p>
+            <div className="suggestions">
+              <button onClick={() => send(`Create a presentation about ${productLabel} and email it to me`)}>Create {productLabel} deck</button>
+              <button onClick={() => send(`Build a 6-slide pitch for ${productLabel} addressing key surgeon objections`)}>Objection-handling pitch</button>
+              <button onClick={() => send(`Create a clinical evidence presentation for ${productLabel}`)}>Clinical evidence deck</button>
+            </div>
+          </div>
+        ) : (
+          messages.map((m, i) => (
+            <div key={i} className={`message ${m.role === "user" ? "user" : "bot"}`}>
+              {m.role !== "user" && <div className="label">Presentation Agent</div>}
+              {m.text}
+              {m.role === "bot" && showDl(m.text) && (
+                <div style={{display:"flex", gap:"8px", flexWrap:"wrap", marginTop:"10px"}}>
+                  <a className="download-btn" href="/api/download">&#x2B07; Download Presentation</a>
+                  <button className="download-btn" onClick={onNavigateTranslate}
+                    style={{background:"var(--primary)"}}>
+                    &#x1F310; Translate to Another Language
+                  </button>
+                </div>
+              )}
+            </div>
+          ))
+        )}
+        {loading && (
+          <div className="message bot"><div className="label">Agent</div><div className="thinking"><span></span><span></span><span></span></div></div>
+        )}
+      </div>
+      <div className="input-bar">
+        <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKey}
+          placeholder="Describe the presentation you need..." disabled={loading} />
+        <button onClick={() => send()} disabled={loading || !input.trim()}>Send</button>
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Translate Page ───────── */
+
+function TranslatePage() {
+  const [file, setFile] = useState(null);
+  const [selectedLang, setSelectedLang] = useState("");
+  const [languages, setLanguages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState("");
+  const [error, setError] = useState("");
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    fetch("/api/translate/languages").then(r => r.json()).then(d => setLanguages(d.languages || [])).catch(() => {});
+  }, []);
+
+  const handleTranslate = async () => {
+    if (!file || !selectedLang) return;
+    setLoading(true);
+    setStatus("Translating…");
+    setError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("language", selectedLang);
+      const res = await fetch("/api/translate", { method: "POST", body: formData });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Translation failed");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `translated_${file.name}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setStatus("Translation complete — file downloaded.");
+    } catch (e) {
+      setError(e.message || "Translation failed.");
+      setStatus("");
+    } finally { setLoading(false); }
+  };
+
+  const langName = (languages.find(l => l.key === selectedLang) || {}).name || "";
+
+  return (
+    <div className="page">
+      <div className="followup-panel">
+        <h2>Translate Presentation</h2>
+        <p className="desc">
+          Upload a PowerPoint presentation and select a target language. The document will be translated
+          using <strong>Azure Document Translation</strong> while preserving formatting, images, and layout.
+        </p>
+
+        <div style={{display:"flex", flexDirection:"column", gap:"16px", maxWidth:"500px"}}>
+          <div>
+            <label style={{display:"block", fontSize:"13px", fontWeight:"600", marginBottom:"6px"}}>Upload PPTX File</label>
+            <div style={{display:"flex", gap:"10px", alignItems:"center"}}>
+              <input ref={fileInputRef} type="file" accept=".pptx" onChange={e => { setFile(e.target.files[0] || null); setStatus(""); setError(""); }}
+                style={{fontSize:"13px"}} />
+            </div>
+            {file && <div style={{fontSize:"12px", color:"var(--gray)", marginTop:"4px"}}>{file.name} ({(file.size / 1024).toFixed(1)} KB)</div>}
+          </div>
+
+          <div>
+            <label style={{display:"block", fontSize:"13px", fontWeight:"600", marginBottom:"6px"}}>Target Language</label>
+            <select value={selectedLang} onChange={e => setSelectedLang(e.target.value)}
+              style={{padding:"10px 14px", fontSize:"14px", border:"2px solid var(--light-gray)",
+                borderRadius:"8px", width:"100%", outline:"none", cursor:"pointer",
+                background:"var(--card)", color:"var(--dark)"}}>
+              <option value="">Select a language…</option>
+              {languages.map(l => (
+                <option key={l.key} value={l.key}>{l.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="action-row">
+            <button onClick={handleTranslate} disabled={loading || !file || !selectedLang}
+              style={{padding:"11px 24px", background:"var(--primary)", color:"#fff", border:"none",
+                borderRadius:"10px", fontSize:"14px", fontWeight:"600", cursor:"pointer"}}>
+              {loading ? "Translating…" : `Translate${langName ? ` to ${langName}` : ""}`}
+            </button>
+            {loading && <div className="thinking" style={{marginLeft:8}}><span></span><span></span><span></span></div>}
+          </div>
+
+          {status && <div style={{padding:"12px 16px", background:"#D4EDDA", border:"1px solid #C3E6CB",
+            borderRadius:"8px", fontSize:"13px", color:"#155724"}}>{status}</div>}
+          {error && <div style={{padding:"12px 16px", background:"#F8D7DA", border:"1px solid #F5C6CB",
+            borderRadius:"8px", fontSize:"13px", color:"#721C24"}}>{error}</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Follow Up Page ───────── */
+const SAMPLE_TRANSCRIPT = `Sales Rep: Hi Dr. Patel, thanks for taking the time today. I wanted to walk you through our new surgical robot, the MedAssist Pro.
+Surgeon: Sure. I've been hearing about it. What's the learning curve?
+Sales Rep: Most surgeons get comfortable within 5-7 cases. We also offer on-site training.
+Surgeon: That's reasonable. What about integration with our existing OR setup?
+Sales Rep: It's compatible with all major imaging systems. We can do a site assessment.
+Surgeon: I'd like that. Also, the cost \u2014 can you share a breakdown?
+Sales Rep: Absolutely, I'll send over a detailed pricing proposal by Friday.
+Surgeon: Great. Let me also discuss this with our department head, Dr. Kim.
+Sales Rep: Perfect. Should I set up a demo for the both of you?
+Surgeon: Yes, sometime next week would work.`;
+
+function FollowUpPage() {
+  const [transcript, setTranscript] = useState("");
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [step, setStep] = useState(0);
+  const [result, setResult] = useState("");
+  const [draft, setDraft] = useState(null);
+  const [draftTo, setDraftTo] = useState("");
+  const [draftSubject, setDraftSubject] = useState("");
+  const [draftBody, setDraftBody] = useState("");
+  const [sendStatus, setSendStatus] = useState("");
+  const [translateLangs, setTranslateLangs] = useState([]);
+  const [translateLang, setTranslateLang] = useState("");
+  const [translating, setTranslating] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/translate/languages").then(r => r.json()).then(d => setTranslateLangs(d.languages || [])).catch(() => {});
+  }, []);
+
+  const run = async () => {
+    if (!transcript.trim() || loading) return;
+    setLoading(true);
+    setStep(1);
+    setResult("");
+    setDraft(null);
+    setSendStatus("");
+    try {
+      setStep(2);
+      const res = await fetch("/api/transcript", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transcript: transcript.trim(), email: email.trim() }),
+      });
+      const data = await res.json();
+      setResult(data.reply || data.error || "Something went wrong.");
+      if (data.draft) {
+        setDraft(data.draft);
+        setDraftTo(data.draft.to || email || "");
+        setDraftSubject(data.draft.subject || "");
+        setDraftBody(data.draft.body || "");
+      }
+      setStep(3);
+    } catch {
+      setResult("Network error.");
+      setStep(3);
+    } finally { setLoading(false); }
+  };
+
+  const handleSend = async () => {
+    if (!draftTo.trim() || !draftSubject.trim() || !draftBody.trim() || sending) return;
+    setSending(true);
+    setSendStatus("");
+    try {
+      const res = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to: draftTo.trim(), subject: draftSubject.trim(), body: draftBody.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSendStatus("Email sent successfully!");
+      } else {
+        setSendStatus(data.error || "Failed to send email.");
+      }
+    } catch {
+      setSendStatus("Network error while sending.");
+    } finally { setSending(false); }
+  };
+
+  const handleTranslateEmail = async () => {
+    if (!translateLang || translating) return;
+    setTranslating(true);
+    try {
+      const res = await fetch("/api/translate/text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ texts: [draftSubject, draftBody], language: translateLang }),
+      });
+      const data = await res.json();
+      if (res.ok && data.translated) {
+        setDraftSubject(data.translated[0]);
+        setDraftBody(data.translated[1]);
+      } else {
+        setSendStatus(data.error || "Translation failed.");
+      }
+    } catch {
+      setSendStatus("Network error during translation.");
+    } finally { setTranslating(false); }
+  };
+
+  const inputStyle = {
+    padding: "9px 12px", fontSize: "13.5px", border: "2px solid var(--light-gray)",
+    borderRadius: "8px", width: "100%", outline: "none", background: "var(--card)",
+    color: "var(--dark)", fontFamily: "Segoe UI, sans-serif",
+  };
+
+  return (
+    <div className="page">
+      <div className="followup-panel">
+        <div style={{display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+          <h2>Analyze Call Transcript</h2>
+          <button onClick={() => setTranscript(SAMPLE_TRANSCRIPT)}
+            style={{padding:"5px 14px", fontSize:"11.5px", border:"1.5px solid #D0D5DD",
+              borderRadius:"6px", background:"#fff", cursor:"pointer", color:"var(--gray)"}}>
+            Load Sample
+          </button>
+        </div>
+        <p className="desc">
+          Paste a call transcript between a Sales Rep and a surgeon. The multi-agent workflow will
+          <strong> (1)</strong> extract key takeaways &amp; action items, then
+          <strong> (2)</strong> generate a follow-up presentation and prepare an email draft for your review.
+        </p>
+
+        <div className="workflow-steps">
+          <span className={`step ${step >= 1 ? (step > 2 ? "done" : "active") : ""}`}>
+            {step > 2 ? "\u2713" : "1"} Analyze Transcript
+          </span>
+          <span className="step-arrow">\u2192</span>
+          <span className={`step ${step >= 2 ? (step > 2 ? "done" : "active") : ""}`}>
+            {step > 2 ? "\u2713" : "2"} Generate Follow-Up Pack
+          </span>
+        </div>
+
+        <textarea value={transcript} onChange={(e) => setTranscript(e.target.value)}
+          placeholder="Paste the call transcript here..." disabled={loading} />
+
+        <div className="field-row">
+          <label>Email to:</label>
+          <input value={email} onChange={(e) => setEmail(e.target.value)}
+            placeholder="recipient@example.com (optional — editable later)" disabled={loading} />
+        </div>
+
+        <div className="action-row">
+          <button onClick={run} disabled={loading || !transcript.trim()}>
+            {loading ? "Processing\u2026" : "Generate Follow Up Pack"}
+          </button>
+          {loading && <div className="thinking" style={{marginLeft:8}}><span></span><span></span><span></span></div>}
+        </div>
+
+        {result && (
+          <div className="result-card">
+            <div className="result-label">Workflow Result</div>
+            {result}
+            <div style={{marginTop:"10px"}}>
+              <a className="download-btn" href="/api/download">&#x2B07; Download Presentation</a>
+            </div>
+          </div>
+        )}
+
+        {draft && (
+          <div style={{marginTop:"20px", padding:"20px 24px", background:"var(--card)", border:"2px solid var(--light-gray)",
+            borderRadius:"12px"}}>
+            <h3 style={{margin:"0 0 14px", fontSize:"16px", color:"var(--dark)"}}>&#x2709;&#xFE0F; Email Draft — Review &amp; Send</h3>
+
+            <div style={{display:"flex", flexDirection:"column", gap:"12px"}}>
+              <div>
+                <label style={{display:"block", fontSize:"12px", fontWeight:"600", color:"var(--gray)", marginBottom:"4px"}}>To</label>
+                <input value={draftTo} onChange={e => setDraftTo(e.target.value)} style={inputStyle} />
+              </div>
+              <div>
+                <label style={{display:"block", fontSize:"12px", fontWeight:"600", color:"var(--gray)", marginBottom:"4px"}}>Subject</label>
+                <input value={draftSubject} onChange={e => setDraftSubject(e.target.value)} style={inputStyle} />
+              </div>
+              <div>
+                <label style={{display:"block", fontSize:"12px", fontWeight:"600", color:"var(--gray)", marginBottom:"4px"}}>Body</label>
+                <textarea value={draftBody} onChange={e => setDraftBody(e.target.value)} rows={8}
+                  style={{...inputStyle, resize:"vertical", lineHeight:"1.6"}} />
+              </div>
+            </div>
+
+            <div style={{display:"flex", alignItems:"center", gap:"12px", marginTop:"16px", flexWrap:"wrap"}}>
+              <button onClick={handleSend}
+                disabled={sending || !draftTo.trim() || !draftSubject.trim() || !draftBody.trim()}
+                style={{padding:"10px 24px", background:"var(--primary)", color:"#fff", border:"none",
+                  borderRadius:"10px", fontSize:"14px", fontWeight:"600", cursor:"pointer"}}>
+                {sending ? "Sending\u2026" : "Send Email"}
+              </button>
+
+              <span style={{color:"var(--light-gray)", fontSize:"18px"}}>|</span>
+
+              <select value={translateLang} onChange={e => setTranslateLang(e.target.value)}
+                style={{padding:"9px 12px", fontSize:"13px", border:"2px solid var(--light-gray)",
+                  borderRadius:"8px", outline:"none", cursor:"pointer", background:"var(--card)", color:"var(--dark)"}}>
+                <option value="">Translate to…</option>
+                {translateLangs.map(l => (
+                  <option key={l.key} value={l.key}>{l.name}</option>
+                ))}
+              </select>
+              <button onClick={handleTranslateEmail} disabled={translating || !translateLang}
+                style={{padding:"10px 20px", background:"#6C63FF", color:"#fff", border:"none",
+                  borderRadius:"10px", fontSize:"13.5px", fontWeight:"600", cursor:"pointer"}}>
+                {translating ? "Translating\u2026" : "\uD83C\uDF10 Translate Email"}
+              </button>
+
+              {(sending || translating) && <div className="thinking"><span></span><span></span><span></span></div>}
+            </div>
+
+            {sendStatus && (
+              <div style={{marginTop:"12px", padding:"10px 16px", borderRadius:"8px", fontSize:"13px",
+                background: sendStatus.includes("success") ? "#D4EDDA" : "#F8D7DA",
+                border: sendStatus.includes("success") ? "1px solid #C3E6CB" : "1px solid #F5C6CB",
+                color: sendStatus.includes("success") ? "#155724" : "#721C24"}}>
+                {sendStatus}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Podcast Page ───────── */
+function PodcastPage() {
+  const [products, setProducts] = useState([]);
+  const [voices, setVoices] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState("");
+  const [ssml, setSsml] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [synthesizing, setSynthesizing] = useState(false);
+  const [audioUrl, setAudioUrl] = useState(null);
+  const [error, setError] = useState("");
+
+  // ── Exam voice state ──
+  const [examPhase, setExamPhase] = useState("idle"); // idle | connecting | active | error | completed
+  const [examError, setExamError] = useState("");
+  const [examTranscript, setExamTranscript] = useState([]); // [{role:"ai"|"user", text}]
+  const [repName, setRepName] = useState("");
+  const [certUrl, setCertUrl] = useState(null);
+  const examAiBufferRef = useRef("");
+  const examWsRef = useRef(null);
+  const examAudioCtxRef = useRef(null);
+  const examMicStreamRef = useRef(null);
+  const examProcessorRef = useRef(null);
+  const examPlayQueueRef = useRef([]);
+  const examIsPlayingRef = useRef(false);
+
+  useEffect(() => {
+    fetch("/api/podcast/options").then(r => r.json()).then(d => {
+      setProducts(d.products || []);
+      setVoices(d.voices || []);
+    });
+  }, []);
+
+  const generateScript = async () => {
+    if (!selectedProduct) return;
+    setGenerating(true);
+    setError("");
+    setSsml("");
+    setAudioUrl(null);
+    try {
+      const res = await fetch("/api/podcast/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product: selectedProduct }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to generate script");
+      setSsml(data.ssml);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const synthesizeAudio = async () => {
+    if (!ssml) return;
+    setSynthesizing(true);
+    setError("");
+    setAudioUrl(null);
+    try {
+      const res = await fetch("/api/podcast/synthesize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ssml }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Synthesis failed");
+      }
+      const blob = await res.blob();
+      setAudioUrl(URL.createObjectURL(blob));
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSynthesizing(false);
+    }
+  };
+
+  // Parse SSML to extract readable dialogue
+  const parseDialogue = (ssmlText) => {
+    const lines = [];
+    const voiceRegex = /<voice\s+name="([^"]+)">([\s\S]*?)<\/voice>/gi;
+    let match;
+    const voiceLookup = {};
+    voices.forEach(v => { voiceLookup[v.voice] = v; });
+    while ((match = voiceRegex.exec(ssmlText)) !== null) {
+      const voiceId = match[1];
+      let text = match[2]
+        .replace(/<break[^/]*\/>/gi, " ")
+        .replace(/<prosody[^>]*>/gi, "")
+        .replace(/<\/prosody>/gi, "")
+        .replace(/<emphasis[^>]*>/gi, "")
+        .replace(/<\/emphasis>/gi, "")
+        .replace(/<[^>]+>/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+      const info = voiceLookup[voiceId];
+      lines.push({
+        name: info ? info.name : voiceId,
+        role: info ? info.role : "",
+        text,
+      });
+    }
+    return lines;
+  };
+
+  const dialogueLines = ssml ? parseDialogue(ssml) : [];
+
+  const roleColors = { "Host": "#0072C6", "Clinical Expert": "#6B21A8", "Sales Specialist": "#047857" };
+
+  // ── Exam voice helpers ──
+  const examArrayBufToBase64 = (buf) => {
+    const bytes = new Uint8Array(buf);
+    let bin = "";
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  };
+  const examBase64ToArrayBuf = (b64) => {
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes.buffer;
+  };
+
+  const examPlayNextChunk = () => {
+    const ctx = examAudioCtxRef.current;
+    if (!ctx || examIsPlayingRef.current || examPlayQueueRef.current.length === 0) return;
+    examIsPlayingRef.current = true;
+    const pcmBuf = examPlayQueueRef.current.shift();
+    const int16 = new Int16Array(pcmBuf);
+    const float32 = new Float32Array(int16.length);
+    for (let i = 0; i < int16.length; i++) float32[i] = int16[i] / 32768;
+    const audioBuf = ctx.createBuffer(1, float32.length, 24000);
+    audioBuf.getChannelData(0).set(float32);
+    const src = ctx.createBufferSource();
+    src.buffer = audioBuf;
+    src.connect(ctx.destination);
+    src.onended = () => { examIsPlayingRef.current = false; examPlayNextChunk(); };
+    src.start();
+  };
+
+  const startExamMicCapture = (ws, ctx) => {
+    navigator.mediaDevices.getUserMedia({ audio: { sampleRate: 24000, channelCount: 1, echoCancellation: true, noiseSuppression: true } })
+      .then(stream => {
+        examMicStreamRef.current = stream;
+        const source = ctx.createMediaStreamSource(stream);
+        const processor = ctx.createScriptProcessor(4096, 1, 1);
+        examProcessorRef.current = processor;
+        processor.onaudioprocess = (ev) => {
+          if (ws.readyState !== WebSocket.OPEN) return;
+          const float32 = ev.inputBuffer.getChannelData(0);
+          const int16 = new Int16Array(float32.length);
+          for (let i = 0; i < float32.length; i++) {
+            int16[i] = Math.max(-32768, Math.min(32767, Math.round(float32[i] * 32767)));
+          }
+          ws.send(JSON.stringify({
+            type: "input_audio_buffer.append",
+            audio: examArrayBufToBase64(int16.buffer),
+          }));
+        };
+        source.connect(processor);
+        processor.connect(ctx.destination);
+      })
+      .catch(err => {
+        console.error("Mic access denied:", err);
+        setExamError("Microphone access denied.");
+        setExamPhase("error");
+      });
+  };
+
+  const startExam = async () => {
+    setExamPhase("connecting");
+    setExamError("");
+    try {
+      const cfgRes = await fetch("/api/exam/voice-config", { method: "POST",
+        headers: { "Content-Type": "application/json" } });
+      const cfg = await cfgRes.json();
+      if (!cfgRes.ok) throw new Error(cfg.error || "Failed to get exam config");
+
+      const wsProto = location.protocol === "https:" ? "wss:" : "ws:";
+      const ws = new WebSocket(`${wsProto}//${location.host}/api/practice/voice-ws`);
+      examWsRef.current = ws;
+
+      const ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+      examAudioCtxRef.current = ctx;
+      examPlayQueueRef.current = [];
+      examIsPlayingRef.current = false;
+
+      let sessionReady = false;
+
+      ws.onmessage = (e) => {
+        const evt = JSON.parse(e.data);
+        if (evt.type === "session.created" && !sessionReady) {
+          ws.send(JSON.stringify({
+            type: "session.update",
+            session: {
+              modalities: ["text", "audio"],
+              instructions: cfg.instructions,
+              voice: cfg.voice,
+              input_audio_format: "pcm16",
+              output_audio_format: "pcm16",
+              input_audio_transcription: { model: "whisper-1" },
+              turn_detection: { type: "server_vad", threshold: 0.5, prefix_padding_ms: 300, silence_duration_ms: 500 },
+            },
+          }));
+        } else if (evt.type === "session.updated") {
+          sessionReady = true;
+          startExamMicCapture(ws, ctx);
+          setExamPhase("active");
+        } else if (evt.type === "response.audio.delta" && evt.delta) {
+          const pcm = examBase64ToArrayBuf(evt.delta);
+          examPlayQueueRef.current.push(pcm);
+          examPlayNextChunk();
+        } else if (evt.type === "response.audio_transcript.delta" && evt.delta) {
+          examAiBufferRef.current += evt.delta;
+        } else if (evt.type === "response.audio_transcript.done") {
+          const text = (evt.transcript || examAiBufferRef.current).trim();
+          if (text) setExamTranscript(prev => [...prev, { role: "ai", text }]);
+          examAiBufferRef.current = "";
+        } else if (evt.type === "conversation.item.input_audio_transcription.completed" && evt.transcript) {
+          const text = evt.transcript.trim();
+          if (text) setExamTranscript(prev => [...prev, { role: "user", text }]);
+        } else if (evt.type === "input_audio_buffer.speech_started") {
+          examPlayQueueRef.current.length = 0;
+          examIsPlayingRef.current = false;
+        } else if (evt.type === "error") {
+          console.error("Exam voice error:", evt.error);
+        }
+      };
+
+      ws.onerror = () => {
+        setExamError("WebSocket connection to proxy failed.");
+        setExamPhase("error");
+      };
+
+      ws.onclose = () => { console.log("Exam WS closed"); };
+    } catch (e) {
+      console.error("Exam voice error:", e);
+      setExamError(e.message || "Failed to connect.");
+      setExamPhase("error");
+    }
+  };
+
+  const stopExam = (showResults) => {
+    if (examWsRef.current) { examWsRef.current.close(); examWsRef.current = null; }
+    if (examProcessorRef.current) { examProcessorRef.current.disconnect(); examProcessorRef.current = null; }
+    if (examMicStreamRef.current) { examMicStreamRef.current.getTracks().forEach(t => t.stop()); examMicStreamRef.current = null; }
+    if (examAudioCtxRef.current) { examAudioCtxRef.current.close(); examAudioCtxRef.current = null; }
+    examPlayQueueRef.current = [];
+    examIsPlayingRef.current = false;
+    setExamPhase(showResults ? "completed" : "idle");
+  };
+
+  // Parse score from the last AI message in the transcript
+  const parseExamScore = () => {
+    const aiMessages = examTranscript.filter(t => t.role === "ai");
+    const lastFew = aiMessages.slice(-3).map(m => m.text).join(" ");
+    const scoreMatch = lastFew.match(/(\d+)\s*(?:out of|\/)\s*(\d+)/i);
+    const pctMatch = lastFew.match(/(\d+)\s*%/i);
+    return {
+      correct: scoreMatch ? parseInt(scoreMatch[1]) : null,
+      total: scoreMatch ? parseInt(scoreMatch[2]) : 10,
+      percentage: pctMatch ? parseInt(pctMatch[1]) : (scoreMatch ? Math.round((parseInt(scoreMatch[1]) / parseInt(scoreMatch[2])) * 100) : null),
+      feedbackText: aiMessages.length > 0 ? aiMessages[aiMessages.length - 1].text : "",
+    };
+  };
+
+  // ── Certificate generator (Canvas) ──
+  const generateCertificate = (name) => {
+    const W = 1000, H = 750;
+    const canvas = document.createElement("canvas");
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext("2d");
+
+    // Background
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillRect(0, 0, W, H);
+
+    // Double border
+    ctx.strokeStyle = "#1B3A5C";
+    ctx.lineWidth = 6;
+    ctx.strokeRect(30, 30, W - 60, H - 60);
+    ctx.lineWidth = 2;
+    ctx.strokeRect(42, 42, W - 84, H - 84);
+
+    // Stethoscope watermark (simplified circle + line)
+    ctx.save();
+    ctx.globalAlpha = 0.07;
+    ctx.strokeStyle = "#64748B";
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.arc(140, 480, 70, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(140, 410);
+    ctx.bezierCurveTo(140, 300, 100, 250, 100, 180);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(140, 410);
+    ctx.bezierCurveTo(140, 300, 180, 250, 180, 180);
+    ctx.stroke();
+    ctx.restore();
+
+    // "Certificate of Achievement"
+    ctx.font = 'italic 46px Georgia, "Times New Roman", serif';
+    ctx.fillStyle = "#1B3A5C";
+    ctx.textAlign = "center";
+    ctx.fillText("Certificate of Achievement", W / 2, 120);
+
+    // Subtitle
+    ctx.font = '13px "Segoe UI", Arial, sans-serif';
+    ctx.fillStyle = "#64748B";
+    ctx.letterSpacing = "3px";
+    ctx.fillText("THIS CERTIFICATE ACKNOWLEDGES THAT", W / 2, 165);
+
+    // Decorative line under subtitle
+    ctx.strokeStyle = "#CBD5E1";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(250, 180); ctx.lineTo(750, 180); ctx.stroke();
+
+    // MedTech logo (M box)
+    const logoX = 300, logoY = 200;
+    ctx.fillStyle = "#1B3A5C";
+    const r = 8;
+    ctx.beginPath();
+    ctx.moveTo(logoX + r, logoY);
+    ctx.lineTo(logoX + 44 - r, logoY);
+    ctx.quadraticCurveTo(logoX + 44, logoY, logoX + 44, logoY + r);
+    ctx.lineTo(logoX + 44, logoY + 44 - r);
+    ctx.quadraticCurveTo(logoX + 44, logoY + 44, logoX + 44 - r, logoY + 44);
+    ctx.lineTo(logoX + r, logoY + 44);
+    ctx.quadraticCurveTo(logoX, logoY + 44, logoX, logoY + 44 - r);
+    ctx.lineTo(logoX, logoY + r);
+    ctx.quadraticCurveTo(logoX, logoY, logoX + r, logoY);
+    ctx.fill();
+    ctx.font = 'bold 28px "Segoe UI", Arial, sans-serif';
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText("M", logoX + 22, logoY + 32);
+    // "MedTech" text
+    ctx.font = 'bold 20px "Segoe UI", Arial, sans-serif';
+    ctx.fillStyle = "#1B3A5C";
+    ctx.textAlign = "left";
+    ctx.fillText("MedTech", logoX + 52, logoY + 30);
+
+    // Heartbeat line
+    ctx.strokeStyle = "#0072C6";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    const hbY = 222;
+    ctx.moveTo(620, hbY);
+    ctx.lineTo(640, hbY);
+    ctx.lineTo(650, hbY - 15);
+    ctx.lineTo(660, hbY + 20);
+    ctx.lineTo(670, hbY - 25);
+    ctx.lineTo(680, hbY + 15);
+    ctx.lineTo(690, hbY);
+    ctx.lineTo(720, hbY);
+    ctx.stroke();
+
+    // Name
+    ctx.textAlign = "center";
+    ctx.font = 'bold 36px Georgia, "Times New Roman", serif';
+    ctx.fillStyle = "#0D1B3E";
+    ctx.fillText(name, W / 2, 270);
+
+    // Line under name
+    ctx.strokeStyle = "#CBD5E1";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(280, 285); ctx.lineTo(720, 285); ctx.stroke();
+
+    // Achievement text
+    ctx.font = '14px "Segoe UI", Arial, sans-serif';
+    ctx.fillStyle = "#1B3A5C";
+    ctx.fillText("HAS SUCCESSFULLY PASSED THE EXAM ON MEDICAL", W / 2, 330);
+    ctx.fillText("DEVICE UNDERSTANDING AND REGULATIONS.", W / 2, 352);
+
+    // Decorative separator
+    ctx.strokeStyle = "#E2E8F0";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(300, 390); ctx.lineTo(700, 390); ctx.stroke();
+
+    // Signature
+    ctx.font = 'italic 32px Georgia, "Times New Roman", serif';
+    ctx.fillStyle = "#1B3A5C";
+    ctx.textAlign = "center";
+    ctx.fillText("David Andrews", 330, 500);
+    // Line under signature
+    ctx.strokeStyle = "#CBD5E1";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(210, 510); ctx.lineTo(450, 510); ctx.stroke();
+    // Title
+    ctx.font = '14px "Segoe UI", Arial, sans-serif';
+    ctx.fillStyle = "#0072C6";
+    ctx.fillText("Program Director", 330, 535);
+
+    // Date
+    const today = new Date();
+    const dateStr = today.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+    ctx.font = '18px "Segoe UI", Arial, sans-serif';
+    ctx.fillStyle = "#334155";
+    ctx.textAlign = "center";
+    ctx.fillText(dateStr, 680, 500);
+    ctx.strokeStyle = "#CBD5E1";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(580, 510); ctx.lineTo(780, 510); ctx.stroke();
+
+    return canvas.toDataURL("image/png");
+  };
+
+  return (
+    <div style={{maxWidth: 900, margin: "0 auto"}}>
+      {/* Product selection */}
+      <div style={{background: "#fff", borderRadius: 14, padding: "32px 36px", boxShadow: "0 2px 12px rgba(0,0,0,.06)", marginBottom: 24}}>
+        <h2 style={{margin: "0 0 8px", color: "#0D1B3E", fontSize: 22}}>🎙️ Podcast Generator</h2>
+        <p style={{color: "#64748B", margin: "0 0 20px", fontSize: 14}}>
+          Generate a multi-voice podcast episode about any of the listed products. The AI writes the script and Azure Speech brings it to life.
+        </p>
+
+        <label style={{display: "block", fontWeight: 600, color: "#334155", marginBottom: 6}}>Select Product</label>
+        <div style={{display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 20}}>
+          {products.map(p => (
+            <button key={p.key} onClick={() => setSelectedProduct(p.key)}
+              style={{
+                padding: "10px 20px", borderRadius: 8, border: "2px solid",
+                borderColor: selectedProduct === p.key ? "#0072C6" : "#E2E8F0",
+                background: selectedProduct === p.key ? "#EFF6FF" : "#fff",
+                color: selectedProduct === p.key ? "#0072C6" : "#334155",
+                fontWeight: 600, cursor: "pointer", fontSize: 14,
+            }}>{p.name}</button>
+          ))}
+        </div>
+
+        {/* Voice cast info */}
+        {voices.length > 0 && (
+          <div style={{marginBottom: 20}}>
+            <label style={{fontWeight: 600, color: "#334155", marginBottom: 8, display: "block"}}>Podcast Cast</label>
+            <div style={{display: "flex", gap: 12, flexWrap: "wrap"}}>
+              {voices.map(v => (
+                <div key={v.key} style={{
+                  padding: "8px 16px", borderRadius: 8, background: "#F8FAFC",
+                  border: "1px solid #E2E8F0", fontSize: 13,
+                }}>
+                  <span style={{fontWeight: 700, color: roleColors[v.role] || "#334155"}}>{v.name}</span>
+                  <span style={{color: "#64748B"}}> — {v.role}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <button onClick={generateScript} disabled={!selectedProduct || generating}
+          style={{
+            padding: "12px 28px", borderRadius: 10, border: "none", fontWeight: 700,
+            fontSize: 15, cursor: selectedProduct && !generating ? "pointer" : "not-allowed",
+            background: selectedProduct && !generating ? "linear-gradient(135deg, #6B21A8, #9333EA)" : "#CBD5E1",
+            color: "#fff",
+          }}>
+          {generating ? "✍️ Writing Script..." : "🎙️ Generate Podcast Script"}
+        </button>
+      </div>
+
+      {error && (
+        <div style={{padding: "12px 18px", background: "#FEF2F2", borderRadius: 10, color: "#991B1B",
+          border: "1px solid #FECACA", marginBottom: 16, fontSize: 14}}>{error}</div>
+      )}
+
+      {/* Script preview */}
+      {dialogueLines.length > 0 && (
+        <div style={{background: "#fff", borderRadius: 14, padding: "28px 32px", boxShadow: "0 2px 12px rgba(0,0,0,.06)", marginBottom: 24}}>
+          <h3 style={{margin: "0 0 16px", color: "#0D1B3E", fontSize: 18}}>📜 Podcast Script</h3>
+          <div style={{maxHeight: 420, overflowY: "auto", paddingRight: 8}}>
+            {dialogueLines.map((line, i) => (
+              <div key={i} style={{marginBottom: 14, padding: "10px 14px", background: "#F8FAFC", borderRadius: 10,
+                borderLeft: `4px solid ${roleColors[line.role] || "#94A3B8"}`}}>
+                <div style={{fontWeight: 700, fontSize: 13, color: roleColors[line.role] || "#334155", marginBottom: 4}}>
+                  {line.name} <span style={{fontWeight: 400, color: "#94A3B8"}}>({line.role})</span>
+                </div>
+                <div style={{fontSize: 14, color: "#334155", lineHeight: 1.5}}>{line.text}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{marginTop: 20, display: "flex", gap: 12, alignItems: "center"}}>
+            <button onClick={synthesizeAudio} disabled={synthesizing}
+              style={{
+                padding: "12px 28px", borderRadius: 10, border: "none", fontWeight: 700,
+                fontSize: 15, cursor: synthesizing ? "not-allowed" : "pointer",
+                background: synthesizing ? "#CBD5E1" : "linear-gradient(135deg, #047857, #10B981)",
+                color: "#fff",
+              }}>
+              {synthesizing ? "🔊 Synthesizing Audio..." : "🔊 Generate Audio"}
+            </button>
+            {synthesizing && (
+              <span style={{color: "#64748B", fontSize: 13}}>This may take a minute...</span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Audio player */}
+      {audioUrl && (
+        <div style={{background: "#fff", borderRadius: 14, padding: "24px 32px", boxShadow: "0 2px 12px rgba(0,0,0,.06)", marginBottom: 24}}>
+          <h3 style={{margin: "0 0 12px", color: "#0D1B3E", fontSize: 18}}>🎧 Podcast Episode</h3>
+          <audio controls src={audioUrl} style={{width: "100%"}} />
+          <div style={{marginTop: 12}}>
+            <a href={audioUrl} download="podcast.mp3"
+              style={{color: "#0072C6", fontWeight: 600, textDecoration: "none", fontSize: 14}}>
+              ⬇️ Download MP3
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* ── Voice Knowledge Exam ── */}
+      <div style={{background: "#fff", borderRadius: 14, padding: "32px 36px", boxShadow: "0 2px 12px rgba(0,0,0,.06)", marginBottom: 24}}>
+        <h2 style={{margin: "0 0 8px", color: "#0D1B3E", fontSize: 22}}>📝 OptiVu Shoulder Knowledge Test</h2>
+        <p style={{color: "#64748B", margin: "0 0 20px", fontSize: 14}}>
+          Take a voice-based exam on the OptiVu Shoulder product. The AI examiner will ask you 30 questions
+          covering product overview, value proposition, safety, device setup, and workflow. Answer verbally and
+          get instant feedback.
+        </p>
+
+        {examPhase === "idle" && (
+          <div>
+            <div style={{display:"flex", gap:12, alignItems:"center", marginBottom:16}}>
+              <label style={{fontWeight:600, color:"#334155", fontSize:14, whiteSpace:"nowrap"}}>Your Name</label>
+              <input value={repName} onChange={e => setRepName(e.target.value)}
+                placeholder="Enter your name for the certificate"
+                style={{padding:"10px 14px", border:"2px solid #E2E8F0", borderRadius:10,
+                  fontSize:14, flex:1, maxWidth:320, outline:"none",
+                  transition:"border-color .2s"}}
+                onFocus={e => e.target.style.borderColor = "#D97706"}
+                onBlur={e => e.target.style.borderColor = "#E2E8F0"} />
+            </div>
+            <div style={{display:"flex", gap:12, alignItems:"center"}}>
+              <button onClick={() => { setCertUrl(null); setExamTranscript([]); startExam(); }}
+                disabled={!repName.trim()}
+                style={{
+                  padding: "12px 28px", borderRadius: 10, border: "none", fontWeight: 700,
+                  fontSize: 15, cursor: repName.trim() ? "pointer" : "not-allowed",
+                  background: repName.trim() ? "linear-gradient(135deg, #D97706, #F59E0B)" : "#E2E8F0",
+                  color: repName.trim() ? "#fff" : "#94A3B8",
+                }}>
+                🎤 Start Voice Exam
+              </button>
+              {examTranscript.length > 0 && (
+                <button onClick={() => setExamPhase("completed")}
+                  style={{padding:"12px 28px", borderRadius:10, border:"2px solid #D97706",
+                    fontWeight:700, fontSize:15, cursor:"pointer", background:"#fff", color:"#D97706"}}>
+                  📊 View Last Results
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {examPhase === "connecting" && (
+          <div style={{display: "flex", alignItems: "center", gap: 16, padding: "16px 0"}}>
+            <div style={{fontSize: 40}}>🎤</div>
+            <div>
+              <div style={{fontWeight: 600, color: "#0D1B3E", fontSize: 16}}>Connecting to examiner…</div>
+              <div className="thinking"><span></span><span></span><span></span></div>
+            </div>
+          </div>
+        )}
+
+        {examPhase === "active" && (
+          <div style={{textAlign: "center", padding: "24px 0"}}>
+            <div className="voice-pulse-ring">
+              <div className="voice-pulse-dot" style={{background: "#D97706"}}></div>
+            </div>
+            <div style={{fontWeight: 600, color: "#0D1B3E", fontSize: 18, marginTop: 20}}>Exam in progress</div>
+            <p style={{color: "#64748B", fontSize: 14, maxWidth: 440, margin: "8px auto 20px", lineHeight: 1.6}}>
+              Listen to each question and answer verbally. The examiner will tell you if you're correct
+              and move to the next question automatically.
+            </p>
+            <button onClick={() => stopExam(true)}
+              style={{padding: "12px 32px", background: "#E53E3E", color: "#fff", border: "none",
+                borderRadius: 12, fontSize: 15, fontWeight: 600, cursor: "pointer"}}>
+              ⏹ End Exam
+            </button>
+          </div>
+        )}
+
+        {examPhase === "error" && (
+          <div style={{padding: "16px 0"}}>
+            <div style={{color: "#E53E3E", fontWeight: 600, marginBottom: 8}}>⚠️ Connection failed</div>
+            <p style={{color: "#64748B", fontSize: 13, marginBottom: 12}}>{examError}</p>
+            <div style={{display: "flex", gap: 12}}>
+              <button onClick={startExam}
+                style={{padding: "10px 24px", background: "#D97706", color: "#fff", border: "none",
+                  borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: "pointer"}}>
+                Retry
+              </button>
+              <button onClick={() => setExamPhase("idle")}
+                style={{padding: "10px 24px", background: "#fff", color: "#64748B", border: "2px solid #E2E8F0",
+                  borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: "pointer"}}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {examPhase === "completed" && (() => {
+          const score = parseExamScore();
+          const pct = score.percentage;
+          const passed = pct >= 80;
+          const scoreColor = passed ? "#047857" : pct >= 60 ? "#D97706" : "#DC2626";
+          const scoreEmoji = passed ? "🏆" : pct >= 60 ? "👍" : "📚";
+          const scoreLabel = passed ? "Excellent — You Passed!" : pct >= 60 ? "Good Effort" : "Needs Review";
+          // Generate certificate on first render if passed
+          if (passed && !certUrl && repName.trim()) {
+            setTimeout(() => setCertUrl(generateCertificate(repName.trim())), 0);
+          }
+          return (
+            <div>
+              {/* Score banner */}
+              {score.correct !== null && (
+                <div style={{background:"linear-gradient(135deg, #F8FAFC, #EEF2FF)", borderRadius:14,
+                  padding:"28px 32px", marginBottom:20, textAlign:"center", border:"1px solid #E2E8F0"}}>
+                  <div style={{fontSize:48}}>{scoreEmoji}</div>
+                  <div style={{fontSize:40, fontWeight:800, color:scoreColor, margin:"8px 0 4px"}}>
+                    {score.correct} / {score.total}
+                  </div>
+                  <div style={{fontSize:22, fontWeight:700, color:scoreColor}}>{pct}%</div>
+                  <div style={{fontSize:16, fontWeight:600, color:"#64748B", marginTop:4}}>{scoreLabel}</div>
+                  {/* Progress bar */}
+                  <div style={{maxWidth:320, margin:"16px auto 0", background:"#E2E8F0", borderRadius:8, height:12, overflow:"hidden"}}>
+                    <div style={{width:`${pct}%`, height:"100%", background:scoreColor, borderRadius:8,
+                      transition:"width 1s ease"}}></div>
+                  </div>
+                </div>
+              )}
+
+              {/* Certificate download (≥ 80%) */}
+              {passed && certUrl && (
+                <div style={{background:"linear-gradient(135deg, #ECFDF5, #D1FAE5)", borderRadius:14,
+                  padding:"20px 28px", marginBottom:20, display:"flex", alignItems:"center", gap:20,
+                  border:"1px solid #A7F3D0"}}>
+                  <div style={{fontSize:40}}>🎓</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight:700, fontSize:16, color:"#047857", marginBottom:4}}>
+                      Congratulations, {repName}!
+                    </div>
+                    <div style={{fontSize:13, color:"#334155", lineHeight:1.5}}>
+                      You passed with {pct}%. Download your certificate of achievement below.
+                    </div>
+                  </div>
+                  <a href={certUrl} download={`MedTech_Certificate_${repName.trim().replace(/\s+/g, "_")}.png`}
+                    style={{padding:"12px 28px", background:"#047857", color:"#fff", borderRadius:10,
+                      fontWeight:700, fontSize:14, textDecoration:"none", whiteSpace:"nowrap",
+                      display:"inline-flex", alignItems:"center", gap:8}}>
+                    📜 Download Certificate
+                  </a>
+                </div>
+              )}
+
+              {/* AI Feedback */}
+              {score.feedbackText && (
+                <div style={{background:"#FFFBEB", borderRadius:12, padding:"16px 20px", marginBottom:20,
+                  borderLeft:"4px solid #D97706"}}>
+                  <div style={{fontWeight:700, fontSize:13, color:"#D97706", marginBottom:6}}>📋 Examiner Feedback</div>
+                  <div style={{fontSize:14, color:"#334155", lineHeight:1.7}}>{score.feedbackText}</div>
+                </div>
+              )}
+
+              {/* Conversation log */}
+              <details style={{marginBottom:16}}>
+                <summary style={{cursor:"pointer", fontWeight:600, fontSize:14, color:"#64748B", marginBottom:8}}>
+                  View Full Exam Transcript ({examTranscript.length} messages)
+                </summary>
+                <div style={{maxHeight:320, overflowY:"auto", border:"1px solid #E2E8F0", borderRadius:10, padding:12}}>
+                  {examTranscript.map((t, i) => (
+                    <div key={i} style={{marginBottom:8, padding:"8px 12px", borderRadius:8,
+                      background: t.role === "ai" ? "#F0F9FF" : "#F0FDF4",
+                      borderLeft: `3px solid ${t.role === "ai" ? "#0072C6" : "#047857"}`}}>
+                      <div style={{fontWeight:700, fontSize:11, color: t.role === "ai" ? "#0072C6" : "#047857", marginBottom:2}}>
+                        {t.role === "ai" ? "🤖 Examiner" : "🧑 You"}
+                      </div>
+                      <div style={{fontSize:13, color:"#334155", lineHeight:1.5}}>{t.text}</div>
+                    </div>
+                  ))}
+                </div>
+              </details>
+
+              <div style={{display:"flex", gap:12}}>
+                <button onClick={() => { setCertUrl(null); setExamTranscript([]); startExam(); }}
+                  style={{padding:"12px 28px", background:"linear-gradient(135deg, #D97706, #F59E0B)",
+                    color:"#fff", border:"none", borderRadius:10, fontWeight:700, fontSize:15, cursor:"pointer"}}>
+                  🔄 Retake Exam
+                </button>
+                <button onClick={() => setExamPhase("idle")}
+                  style={{padding:"12px 28px", background:"#fff", color:"#64748B",
+                    border:"2px solid #E2E8F0", borderRadius:10, fontWeight:700, fontSize:15, cursor:"pointer"}}>
+                  Back
+                </button>
+              </div>
+            </div>
+          );
+        })()}
+      </div>
+    </div>
+  );
+}
+
+/* ───────── App Shell ───────── */
+const TABS = [
+  { id: "podcast",  label: "Learn",     icon: "\uD83C\uDFA7" },
+  { id: "practice", label: "Practice",  icon: "\uD83C\uDFAF" },
+  { id: "deliver",  label: "Deliver",   icon: "\uD83D\uDCCA" },
+  { id: "translate", label: "Translate", icon: "\uD83C\uDF10" },
+  { id: "followup", label: "Follow Up", icon: "\uD83D\uDCCB" },
+];
+
+function App() {
+  const [tab, setTab] = useState("practice");
+
+  useEffect(() => {
+    const el = document.getElementById("header-home");
+    if (el) {
+      const handler = () => setTab("practice");
+      el.addEventListener("click", handler);
+      return () => el.removeEventListener("click", handler);
+    }
+  }, []);
+
+  return (
+    <>
+      {/* Nav rendered via portal into header */}
+      {ReactDOM.createPortal(
+        TABS.map((t) => (
+          <button key={t.id} className={tab === t.id ? "active" : ""} onClick={() => setTab(t.id)}>
+            <span className="nav-icon">{t.icon}</span> {t.label}
+          </button>
+        )),
+        document.getElementById("nav")
+      )}
+
+      {tab === "practice" && <PracticePage />}
+      {tab === "deliver"  && <DeliverPage onNavigateTranslate={() => setTab("translate")} />}
+      {tab === "translate" && <TranslatePage />}
+      {tab === "followup" && <FollowUpPage />}
+      {tab === "podcast"  && <PodcastPage />}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
